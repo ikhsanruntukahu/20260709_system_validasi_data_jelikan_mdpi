@@ -31,7 +31,7 @@ div[data-testid="metric-container"]{
 # ==========================================================
 # HEADER
 # ==========================================================
-col1, col2 = st.columns([0.01, 3])
+col1, col2, col3 = st.columns([1, 4, 1])
 with col1:
     try:
         st.image(logo, width=180)
@@ -44,6 +44,9 @@ with col2:
     <h3 style="color:#555; text-align:center; margin-top:5px;">Yayasan Masyarakat dan Perikanan Indonesia (MDPI)</h3>
     <h4 style="color:#777; text-align:center;">Validasi Data Otomatis</h4>
     """, unsafe_allow_html=True)
+
+with col3:
+    st.empty()
 
 st.markdown("---")
 
@@ -59,7 +62,7 @@ Validasi meliputi:
 - Penambahan kolom Catatan Validasi
 
 Output berupa file Excel hasil validasi.
-Cek datamu sekarang jangan nanti menumpuk!
+Cek datamu sekarang jangan nanti-nanti!
 """)
 
 # ==========================================================
@@ -68,7 +71,7 @@ Cek datamu sekarang jangan nanti menumpuk!
 uploaded_file = st.file_uploader("Upload File Excel", type=["xlsx"])
 
 if uploaded_file is None:
-    st.info("Silakan upload file Excel (.xlsx).")
+    st.info("Silakan upload file Excel (.xlsx) hasil download dari jelikan (ExtractDataSampling.xlsx).")
     st.markdown("---")
     st.markdown("""
     <div style='text-align:center;color:#666'>
@@ -88,9 +91,9 @@ total_data_keseluruhan = 0
 total_error_keseluruhan = 0
 
 # ==========================================================
-# DICTIONARY BATASAN (STANDARD) YFT
+# DICTIONARY BATASAN YFT
 # ==========================================================
-# Referensi: loin1_panjang: (berat_min, berat_max)
+# Referensi YFT Loin: loin1_panjang: (berat_min, berat_max)
 loin_batas = {
     45: (2, 4.1), 46: (2, 3), 47: (2, 4.2), 48: (2, 3.7), 49: (2, 4.9), 50: (2, 3.46),
     51: (2, 3.6), 52: (2, 3.62), 53: (2, 3.51), 54: (2, 3.72), 55: (2, 3.9), 56: (2, 3.75),
@@ -104,7 +107,7 @@ loin_batas = {
     99: (9.3, 15.1), 100: (10.1, 15.1)
 }
 
-# Referensi: panjang: (berat_min, berat_max)
+# Referensi YFT Utuh: panjang: (berat_min, berat_max)
 bp_batas = {
     80: (10, 16.28), 81: (10, 16.36), 82: (10, 19.4), 83: (10, 14.29), 84: (10, 16), 85: (10, 19.78),
     86: (10, 17.85), 87: (10, 18.01), 88: (10, 19), 89: (10, 19.85), 90: (10, 21), 91: (10, 18.45),
@@ -121,6 +124,52 @@ bp_batas = {
     153: (55, 71), 154: (51.24, 78), 155: (57, 85), 156: (56, 82), 157: (54, 83), 158: (60, 79),
     159: (64, 83), 160: (64, 90), 161: (64, 90), 162: (64, 81), 163: (70, 90), 164: (63, 86),
     165: (70, 89), 166: (72, 90), 167: (70, 85), 168: (81, 92), 169: (85, 97), 170: (80, 87)
+}
+
+# Referensi BET: panjang: (berat_min, berat_max)
+# ==========================================================
+# DICTIONARY BATASAN BET
+# ==========================================================
+bet_bp_batas = {
+    74: (10, 11), 75: (10, 12), 76: (10, 11), 77: (10, 11), 78: (10, 12), 
+    79: (10, 12), 80: (10, 13), 81: (10, 15), 82: (10, 13), 83: (11, 14), 
+    84: (10, 17), 85: (10, 14), 86: (10, 15), 87: (11, 16), 88: (11, 16), 
+    89: (11, 20), 90: (11, 20), 91: (13, 20), 92: (13, 18), 93: (13, 18), 
+    94: (14, 19), 95: (13, 20), 96: (14, 20), 97: (14, 20), 98: (13, 24), 
+    99: (17, 21), 100: (19, 24), 101: (18, 22), 102: (17, 23), 103: (18, 25), 
+    104: (19, 27), 105: (11, 30), 106: (20, 28), 107: (22, 26), 108: (21, 29), 
+    109: (22, 28), 110: (21, 34), 111: (23, 34), 112: (20, 33), 113: (24, 35), 
+    114: (25, 38), 115: (27, 33), 116: (26, 35), 117: (29, 38), 118: (28, 37), 
+    119: (26, 39), 120: (28, 39), 121: (32, 44), 122: (32, 43), 123: (29, 40), 
+    124: (29, 42), 125: (35, 43), 126: (34, 42), 127: (38, 45), 128: (27, 46), 
+    129: (37, 50), 130: (40, 49), 131: (41, 48), 132: (41, 54), 133: (37, 52), 
+    134: (41, 54), 135: (41, 56), 136: (42, 55), 137: (46, 56), 138: (43, 57), 
+    139: (48, 61), 140: (45, 61), 141: (51, 68), 142: (50, 65), 143: (48, 63), 
+    144: (53, 69), 145: (55, 69), 146: (55, 74), 147: (57, 70), 148: (57, 73), 
+    149: (58, 71), 150: (55, 78), 151: (57, 83), 152: (63, 79), 153: (64, 75), 
+    154: (61, 77), 155: (63, 78), 156: (67, 81), 157: (68, 87), 158: (69, 83), 
+    159: (66, 88), 160: (72, 88), 161: (69, 86), 162: (77, 91), 163: (76, 94), 
+    164: (82, 95), 165: (79, 95), 166: (80, 95), 167: (90, 100), 168: (86, 88), 
+    169: (85, 92), 170: (94, 104), 171: (99, 105), 172: (99, 99), 173: (112, 112)
+}
+
+# Referensi ALB Loin: loin1_panjang: (berat_min, berat_max)
+# ==========================================================
+# DICTIONARY BATASAN ALB
+# ==========================================================
+alb_bp_batas = {
+    74: (11, 11), 77: (11, 11), 78: (11, 11), 79: (14, 14), 80: (14, 14),
+    81: (14, 15), 82: (10, 11), 84: (11, 12), 85: (12, 16), 86: (15, 15),
+    87: (12, 14), 88: (12, 14), 89: (13, 15), 90: (13, 15), 91: (13, 15),
+    92: (14, 16), 93: (15, 17), 94: (15, 17), 95: (16, 18), 96: (16, 18),
+    97: (17, 19), 98: (18, 20), 99: (18, 20), 100: (18, 20), 101: (18, 22),
+    102: (19, 23), 103: (21, 23), 104: (21, 23), 105: (21, 23), 106: (21, 23),
+    107: (22, 26), 108: (24, 25), 109: (21, 24), 110: (24, 25), 111: (26, 28),
+    112: (27, 27), 113: (27, 27), 114: (24, 24), 115: (24, 25), 116: (27, 27),
+    117: (30, 30), 119: (28, 28), 120: (30, 33), 122: (32, 32), 123: (33, 33),
+    125: (35, 35), 129: (38, 39), 130: (40, 40), 132: (41, 41), 140: (51, 51),
+    143: (54, 54), 144: (50, 50), 147: (57, 57), 148: (59, 60), 163: (77, 77),
+    164: (80, 80)
 }
 
 # ==========================================================
@@ -232,6 +281,9 @@ for sheet_name, df in all_sheets.items():
         # ======================================================
         # TAMBAHAN: VALIDASI SHEET 7-LargeFish
         # ======================================================
+
+    #YFT logic
+
         elif sheet_name == "7-LargeFish":
             k_species = str(row.get("k_species", "")).strip().upper()
             
@@ -276,6 +328,66 @@ for sheet_name, df in all_sheets.items():
                                 error.append(f"Berat ikan ({b_val}) tidak sesuai standard panjang ({p_val})")
                         else:
                             error.append(f"Panjang ({p_val}) di luar batas pengecekan referensi berat-panjang YFT")
+
+            # BET logic
+            
+            elif k_species == "BET":
+                # Tarik semua data relevan untuk Sheet 7-LargeFish
+                b_val = pd.to_numeric(row.get("berat"), errors='coerce')
+                p_val = pd.to_numeric(row.get("panjang"), errors='coerce')
+                lb_val = pd.to_numeric(row.get("loin1_berat"), errors='coerce')
+                lp_val = pd.to_numeric(row.get("loin1_panjang"), errors='coerce')
+                kb_val = pd.to_numeric(row.get("karkas_berat"), errors='coerce')
+                kp_val = pd.to_numeric(row.get("karkas_panjang"), errors='coerce')
+
+                # Cek eksistensi pasangan data berdasarkan aturan
+                has_bp = (pd.notna(b_val) and b_val > 0) and (pd.notna(p_val) and p_val > 0)
+                has_loin = (pd.notna(lb_val) and lb_val > 0) and (pd.notna(lp_val) and lp_val > 0)
+                has_karkas = (pd.notna(kb_val) and kb_val > 0) and (pd.notna(kp_val) and kp_val > 0)
+
+                # Validasi kelengkapan minimal salah satu pasangan data terisi
+                if not (has_bp or has_loin or has_karkas):
+                    error.append("Data BET tidak valid: Harus melengkapi minimal salah satu pasangan data (berat & panjang) ATAU (loin1) ATAU (karkas)")
+                
+                # Jika data berat dan panjang utuh diisi, lakukan pengecekan batasan
+                if has_bp:
+                    p_int = int(p_val)
+                    if p_int in bet_bp_batas:
+                        b_min, b_max = bet_bp_batas[p_int]
+                        if not (b_min <= b_val <= b_max):
+                            error.append(f"Berat ikan BET ({b_val}) tidak sesuai standard panjang ({p_val})")
+                    else:
+                        error.append(f"Panjang BET ({p_val}) di luar batas referensi berat-panjang")
+            
+            # ALB logic
+            elif k_species == "ALB":
+                # Tarik semua data relevan untuk Sheet 7-LargeFish
+                b_val = pd.to_numeric(row.get("berat"), errors='coerce')
+                p_val = pd.to_numeric(row.get("panjang"), errors='coerce')
+                lb_val = pd.to_numeric(row.get("loin1_berat"), errors='coerce')
+                lp_val = pd.to_numeric(row.get("loin1_panjang"), errors='coerce')
+                kb_val = pd.to_numeric(row.get("karkas_berat"), errors='coerce')
+                kp_val = pd.to_numeric(row.get("karkas_panjang"), errors='coerce')
+
+                # Cek eksistensi pasangan data berdasarkan aturan
+                has_bp = (pd.notna(b_val) and b_val > 0) and (pd.notna(p_val) and p_val > 0)
+                has_loin = (pd.notna(lb_val) and lb_val > 0) and (pd.notna(lp_val) and lp_val > 0)
+                has_karkas = (pd.notna(kb_val) and kb_val > 0) and (pd.notna(kp_val) and kp_val > 0)
+
+                # Validasi kelengkapan minimal salah satu pasangan data terisi
+                if not (has_bp or has_loin or has_karkas):
+                    error.append("Data ALB tidak valid: Harus melengkapi minimal salah satu pasangan data (berat & panjang) ATAU (loin1) ATAU (karkas)")
+                
+                # Jika data berat dan panjang utuh diisi, lakukan pengecekan batasan
+                if has_bp:
+                    p_int = int(p_val)
+                    if p_int in alb_bp_batas:
+                        b_min, b_max = alb_bp_batas[p_int]
+                        if not (b_min <= b_val <= b_max):
+                            error.append(f"Berat ikan ALB ({b_val}) tidak sesuai standard panjang ({p_val})")
+                    else:
+                        error.append(f"Panjang ALB ({p_val}) di luar batas referensi berat-panjang")
+
 
         # ======================================================
         # 2. VALIDASI KOLOM LAINNYA (CEK KOSONG DEFAULT)

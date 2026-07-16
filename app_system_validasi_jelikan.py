@@ -388,7 +388,25 @@ for sheet_name, df in all_sheets.items():
                     else:
                         error.append(f"Panjang ALB ({p_val}) di luar batas referensi berat-panjang")
 
-
+        # TAMBAHAN: VALIDASI SHEET 2-Umpan Info
+        # ======================================================
+        elif sheet_name == "2-Umpan Info":
+            kategori_umpan = str(row.get("kategori_umpan", "")).strip().upper()
+            
+            # Ambil nilai numerik dari kolom umpan
+            t_umpan = pd.to_numeric(row.get("total_umpan"), errors='coerce')
+            e_umpan = pd.to_numeric(row.get("estimasi_umpan"), errors='coerce')
+            
+            # Anggap terisi jika ada nilainya dan lebih dari 0
+            has_total = pd.notna(t_umpan) and t_umpan > 0
+            has_estimasi = pd.notna(e_umpan) and e_umpan > 0
+            
+            if kategori_umpan in ['A', 'B', 'C', 'D', 'E', 'G']:
+                # Khusus untuk total_umpan & estimasi_umpan harus isi SALAH SATU
+                if has_total and has_estimasi:
+                    error.append("pilih berat umpan salah satu (total ril atau estimasi)")
+                elif not has_total and not has_estimasi:
+                    error.append("berat umpan kosong")
         # ======================================================
         # 2. VALIDASI KOLOM LAINNYA (CEK KOSONG DEFAULT)
         # ======================================================
@@ -411,6 +429,25 @@ for sheet_name, df in all_sheets.items():
                     "berat", "panjang", "loin1_berat", "loin1_panjang", 
                     "karkas_panjang", "karkas_berat"
                 ]
+
+            elif sheet_name == "2-Umpan Info":
+                kategori_umpan_cek = str(row.get("kategori_umpan", "")).strip().upper()
+                
+                if kategori_umpan_cek == 'F':
+                    # Jika F, semua ini BOLEH kosong/0
+                    kolom_dilewati = [
+                        "grid1", "grid2", "total_umpan", "estimasi_umpan", 
+                        "alattangkap_umpan", "domestic_or_import", "pengadaan_umpan"
+                    ]
+                else:
+                    # Jika A, B, C, D, E, G: 
+                    # grid1, grid2, alattangkap_umpan TIDAK ADA di sini (sehingga akan kena error jika kosong)
+                    # total_umpan & estimasi_umpan ADA di sini (karena validasi kosongnya sudah diatur di logika khusus di atas)
+                    # domestic_or_import & pengadaan_umpan ADA di sini (karena boleh kosong/tidak masalah)
+                    kolom_dilewati = [
+                        "total_umpan", "estimasi_umpan", 
+                        "domestic_or_import", "pengadaan_umpan"
+                    ]
 
             if kolom in kolom_dilewati:
                 continue

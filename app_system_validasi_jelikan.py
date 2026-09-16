@@ -1,21 +1,18 @@
-# ==========================================================
-# IMPORT
-# ==========================================================
+# --- Import Library ---
 import streamlit as st
 import pandas as pd
+import calendar
 from PIL import Image
 from io import BytesIO
 
-# LANDING PAGE
+# --- Landing Page ---
 try:
     logo = Image.open("_ MDPI Primary Logo.png")
     st.set_page_config(page_title="Sistem Validasi Data Jelikan", page_icon=logo, layout="wide")
 except:
     st.set_page_config(page_title="Sistem Validasi Data Jelikan", layout="wide")
 
-# ==========================================================
-# STYLE
-# ==========================================================
+# --- Kustomisasi CSS ---
 st.markdown("""
 <style>
 div[data-testid="metric-container"]{
@@ -28,9 +25,7 @@ div[data-testid="metric-container"]{
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================================
-# HEADER
-# ==========================================================
+# --- Header ---
 col1, col2, col3 = st.columns([1, 4, 1])
 with col1:
     try:
@@ -50,9 +45,7 @@ with col3:
 
 st.markdown("---")
 
-# ==========================================================
-# INFORMASI
-# ==========================================================
+# --- Informasi Aplikasi ---
 st.info("""
 ### Informasi Aplikasi
 Aplikasi ini dapat melakukan validasi otomatis terhadap seluruh data dari Jelikan.
@@ -62,12 +55,10 @@ Validasi meliputi:
 - Penambahan kolom Catatan Validasi
 
 Output berupa file Excel hasil validasi.
-Cek datamu sekarang jangan nanti-nanti!
+Cek datamu sekarang jangan tunda-tunda!
 """)
 
-# ==========================================================
-# UPLOAD
-# ==========================================================
+# --- Upload File ---
 uploaded_file = st.file_uploader("Upload File Excel", type=["xlsx"])
 
 if uploaded_file is None:
@@ -82,18 +73,13 @@ if uploaded_file is None:
     """, unsafe_allow_html=True)
     st.stop()
 
-# ==========================================================
-# MEMBACA EXCEL
-# ==========================================================
+# --- Baca File Excel ---
 all_sheets = pd.read_excel(uploaded_file, sheet_name=None)
 validated_sheets = {}
 total_data_keseluruhan = 0
 total_error_keseluruhan = 0
 
-# ==========================================================
-# DICTIONARY BATASAN YFT
-# ==========================================================
-# Referensi YFT Loin: loin1_panjang: (berat_min, berat_max)
+# --- Referensi Batas Berat & Panjang ---
 loin_batas = {
     45: (2, 4.1), 46: (2, 3), 47: (2, 4.2), 48: (2, 3.7), 49: (2, 4.9), 50: (2, 3.46),
     51: (2, 3.6), 52: (2, 3.62), 53: (2, 3.51), 54: (2, 3.72), 55: (2, 3.9), 56: (2, 3.75),
@@ -107,7 +93,6 @@ loin_batas = {
     99: (9.3, 15.1), 100: (10.1, 15.1)
 }
 
-# Referensi YFT Utuh: panjang: (berat_min, berat_max)
 bp_batas = {
     80: (10, 16.28), 81: (10, 16.36), 82: (10, 19.4), 83: (10, 14.29), 84: (10, 16), 85: (10, 19.78),
     86: (10, 17.85), 87: (10, 18.01), 88: (10, 19), 89: (10, 19.85), 90: (10, 21), 91: (10, 18.45),
@@ -126,10 +111,6 @@ bp_batas = {
     165: (70, 89), 166: (72, 90), 167: (70, 85), 168: (81, 92), 169: (85, 97), 170: (80, 87)
 }
 
-# Referensi BET: panjang: (berat_min, berat_max)
-# ==========================================================
-# DICTIONARY BATASAN BET
-# ==========================================================
 bet_bp_batas = {
     74: (10, 11), 75: (10, 12), 76: (10, 11), 77: (10, 11), 78: (10, 12), 
     79: (10, 12), 80: (10, 13), 81: (10, 15), 82: (10, 13), 83: (11, 14), 
@@ -153,10 +134,6 @@ bet_bp_batas = {
     169: (85, 92), 170: (94, 104), 171: (99, 105), 172: (99, 99), 173: (112, 112)
 }
 
-# Referensi ALB Loin: loin1_panjang: (berat_min, berat_max)
-# ==========================================================
-# DICTIONARY BATASAN ALB
-# ==========================================================
 alb_bp_batas = {
     74: (11, 11), 77: (11, 11), 78: (11, 11), 79: (14, 14), 80: (14, 14),
     81: (14, 15), 82: (10, 11), 84: (11, 12), 85: (12, 16), 86: (15, 15),
@@ -172,26 +149,20 @@ alb_bp_batas = {
     164: (80, 80)
 }
 
-# ==========================================================
-# VALIDASI
-# ==========================================================
+# --- Proses Validasi Tiap Sheet ---
 for sheet_name, df in all_sheets.items():
     catatan = []
     for _, row in df.iterrows():
         error = []
         
-        # ======================================================
-        # 1. TEMPAT MENAMBAH LOGIKA KHUSUS PER SHEET
-        # ======================================================
+        # --- Logika Khusus: 1-Trip Info ---
         if sheet_name == "1-Trip Info":
-            # --- Enumerator ---
             enum1 = str(row.get("enumerator1", "")).strip()
             enum2 = str(row.get("enumerator2", "")).strip()
             if (pd.isna(row.get("enumerator1")) or enum1 == "" or enum1.lower() == "nan") and \
                (pd.isna(row.get("enumerator2")) or enum2 == "" or enum2.lower() == "nan"):
                 error.append("enumerator 1 kosong")
             
-            # --- Satuan Trip & Lama Jam/Hari ---
             satuan = str(row.get("satuan_trip", "")).strip().upper()
             lama_jam = pd.to_numeric(row.get("lama_jam"), errors='coerce')
             lama_hari = pd.to_numeric(row.get("lama_hari"), errors='coerce')
@@ -215,29 +186,24 @@ for sheet_name, df in all_sheets.items():
                 if pd.isna(lama_hari) or lama_hari == 0:
                     error.append("lama_hari tidak boleh 0 atau kosong karena satuan trip H")
             
-            # --- Validasi Jumlah Hari Memancing ---
             if pd.notna(hari_mancing) and pd.notna(lama_hari):
                 if hari_mancing > lama_hari:
                     if not is_pengecualian_valid:
                         error.append("Jumlah Hari Memancing Lebih Lama dari Jumlah Hari Trip")
             
-            # --- Penggunaan Es ---
             es = str(row.get("penggunaan_es", "")).strip()
             if es == "" or es.lower() == "nan":
                 error.append("Apakah nelayan tidak membawa ES? Jika Ya beri catatan di deskripsi")
             
-            # --- Kapasitas & Panjang ---
             for col in ["kapasitas_kapal", "panjang_kapal", "kapasitas_mesin"]:
                 val = pd.to_numeric(row.get(col), errors='coerce')
                 if pd.isna(val) or val == 0:
                     error.append(f"{col} tidak boleh 0 dan kosong")
             
-            # --- Alat Tangkap ---
             alat = str(row.get("k_alattangkap", "")).strip().upper()
             if alat != "HL":
                 error.append("Alat tangkap bukan HL")
             
-            # --- Rumpon & Teknik Pencarian & Jumlah ---
             rumpon = str(row.get("rumpon", "")).strip().upper()
             teknik = str(row.get("teknik_pencarian_lokasi_tuna", "")).strip().lower()
             jml_rumpon = pd.to_numeric(row.get("jumlah rumpon"), errors='coerce')
@@ -260,7 +226,6 @@ for sheet_name, df in all_sheets.items():
                 if pd.isna(jml_rumpon) or jml_rumpon == 0:
                     error.append("jumlah rumpon tidak sesuai (rumpon X tidak boleh kosong/0)")
             
-            # --- Kedalaman ---
             k_min = pd.to_numeric(row.get("kedalaman min"), errors='coerce')
             k_max = pd.to_numeric(row.get("kedalaman max"), errors='coerce')
             
@@ -272,18 +237,12 @@ for sheet_name, df in all_sheets.items():
                 if not (0 <= k_min <= 300) or not (0 <= k_max <= 300):
                     error.append("nilai kedalaman mencurigakan (di luar 0 - 300)")
             
-            # --- Palka ---
             for col in ["jumlah palka", "kapasitas palka"]:
                 val_str = str(row.get(col, "")).strip()
                 if val_str == "" or val_str.lower() == "nan":
                     error.append(f"{col} boleh 0 tapi tidak boleh kosong")
                     
-        # ======================================================
-        # TAMBAHAN: VALIDASI SHEET 7-LargeFish
-        # ======================================================
-
-    #YFT logic
-
+        # --- Logika Khusus: 7-LargeFish ---
         elif sheet_name == "7-LargeFish":
             k_species = str(row.get("k_species", "")).strip().upper()
             
@@ -293,13 +252,9 @@ for sheet_name, df in all_sheets.items():
                 lb_val = pd.to_numeric(row.get("loin1_berat"), errors='coerce')
                 lp_val = pd.to_numeric(row.get("loin1_panjang"), errors='coerce')
                 
-                # Cek apakah ada indikasi data loin (nilai lebih dari 0)
                 ada_indikasi_loin = (pd.notna(lb_val) and lb_val > 0) or (pd.notna(lp_val) and lp_val > 0)
                 
                 if ada_indikasi_loin:
-                    # ----------------------------------------------------
-                    # FOKUS VALIDASI DATA LOIN
-                    # ----------------------------------------------------
                     if pd.isna(lb_val) or pd.isna(lp_val) or lb_val <= 0 or lp_val <= 0:
                         error.append("Data loin tidak lengkap (loin1_berat dan loin1_panjang keduanya harus diisi jika salah satu ada nilainya)")
                     else:
@@ -312,12 +267,7 @@ for sheet_name, df in all_sheets.items():
                             error.append(f"loin1_panjang ({lp_val}) di luar batas pengecekan referensi YFT")
                 
                 else:
-                    # ----------------------------------------------------
-                    # JIKA BUKAN LOIN, FOKUS VALIDASI IKAN UTUH
-                    # ----------------------------------------------------
-                    # Loin kosong/0 tidak masalah, asalkan ada berat & panjang
                     has_bp = (pd.notna(b_val) and b_val > 0) and (pd.notna(p_val) and p_val > 0)
-                    
                     if not has_bp:
                         error.append("Harus mengisi (berat & panjang) utuh, atau mengisi data loin (jika ikan berupa loin)")
                     else:
@@ -329,10 +279,7 @@ for sheet_name, df in all_sheets.items():
                         else:
                             error.append(f"Panjang ({p_val}) di luar batas pengecekan referensi berat-panjang YFT")
 
-            # BET logic
-            
             elif k_species == "BET":
-                # Tarik semua data relevan untuk Sheet 7-LargeFish
                 b_val = pd.to_numeric(row.get("berat"), errors='coerce')
                 p_val = pd.to_numeric(row.get("panjang"), errors='coerce')
                 lb_val = pd.to_numeric(row.get("loin1_berat"), errors='coerce')
@@ -340,16 +287,13 @@ for sheet_name, df in all_sheets.items():
                 kb_val = pd.to_numeric(row.get("karkas_berat"), errors='coerce')
                 kp_val = pd.to_numeric(row.get("karkas_panjang"), errors='coerce')
 
-                # Cek eksistensi pasangan data berdasarkan aturan
                 has_bp = (pd.notna(b_val) and b_val > 0) and (pd.notna(p_val) and p_val > 0)
                 has_loin = (pd.notna(lb_val) and lb_val > 0) and (pd.notna(lp_val) and lp_val > 0)
                 has_karkas = (pd.notna(kb_val) and kb_val > 0) and (pd.notna(kp_val) and kp_val > 0)
 
-                # Validasi kelengkapan minimal salah satu pasangan data terisi
                 if not (has_bp or has_loin or has_karkas):
-                    error.append("Data BET tidak valid: Harus melengkapi minimal salah satu pasangan data (berat & panjang) ATAU (loin1) ATAU (karkas)")
+                    error.append("Harus melengkapi minimal salah satu pasangan data (berat & panjang) ATAU (loin1) ATAU (karkas)")
                 
-                # Jika data berat dan panjang utuh diisi, lakukan pengecekan batasan
                 if has_bp:
                     p_int = int(p_val)
                     if p_int in bet_bp_batas:
@@ -359,9 +303,7 @@ for sheet_name, df in all_sheets.items():
                     else:
                         error.append(f"Panjang BET ({p_val}) di luar batas referensi berat-panjang")
             
-            # ALB logic
             elif k_species == "ALB":
-                # Tarik semua data relevan untuk Sheet 7-LargeFish
                 b_val = pd.to_numeric(row.get("berat"), errors='coerce')
                 p_val = pd.to_numeric(row.get("panjang"), errors='coerce')
                 lb_val = pd.to_numeric(row.get("loin1_berat"), errors='coerce')
@@ -369,16 +311,13 @@ for sheet_name, df in all_sheets.items():
                 kb_val = pd.to_numeric(row.get("karkas_berat"), errors='coerce')
                 kp_val = pd.to_numeric(row.get("karkas_panjang"), errors='coerce')
 
-                # Cek eksistensi pasangan data berdasarkan aturan
                 has_bp = (pd.notna(b_val) and b_val > 0) and (pd.notna(p_val) and p_val > 0)
                 has_loin = (pd.notna(lb_val) and lb_val > 0) and (pd.notna(lp_val) and lp_val > 0)
                 has_karkas = (pd.notna(kb_val) and kb_val > 0) and (pd.notna(kp_val) and kp_val > 0)
 
-                # Validasi kelengkapan minimal salah satu pasangan data terisi
                 if not (has_bp or has_loin or has_karkas):
-                    error.append("Data ALB tidak valid: Harus melengkapi minimal salah satu pasangan data (berat & panjang) ATAU (loin1) ATAU (karkas)")
+                    error.append("Harus melengkapi minimal salah satu pasangan data (berat & panjang) ATAU (loin1) ATAU (karkas)")
                 
-                # Jika data berat dan panjang utuh diisi, lakukan pengecekan batasan
                 if has_bp:
                     p_int = int(p_val)
                     if p_int in alb_bp_batas:
@@ -388,31 +327,130 @@ for sheet_name, df in all_sheets.items():
                     else:
                         error.append(f"Panjang ALB ({p_val}) di luar batas referensi berat-panjang")
 
-        # TAMBAHAN: VALIDASI SHEET 2-Umpan Info
-        # ======================================================
+        # --- Logika Khusus: 2-Umpan Info ---
         elif sheet_name == "2-Umpan Info":
             kategori_umpan = str(row.get("kategori_umpan", "")).strip().upper()
-            
-            # Ambil nilai numerik dari kolom umpan
             t_umpan = pd.to_numeric(row.get("total_umpan"), errors='coerce')
             e_umpan = pd.to_numeric(row.get("estimasi_umpan"), errors='coerce')
             
-            # Anggap terisi jika ada nilainya dan lebih dari 0
             has_total = pd.notna(t_umpan) and t_umpan > 0
             has_estimasi = pd.notna(e_umpan) and e_umpan > 0
             
             if kategori_umpan in ['A', 'B', 'C', 'D', 'E', 'G']:
-                # Khusus untuk total_umpan & estimasi_umpan harus isi SALAH SATU
                 if has_total and has_estimasi:
                     error.append("pilih berat umpan salah satu (total ril atau estimasi)")
                 elif not has_total and not has_estimasi:
                     error.append("berat umpan kosong")
-        # ======================================================
-        # 2. VALIDASI KOLOM LAINNYA (CEK KOSONG DEFAULT)
-        # ======================================================
+                    
+        # --- Logika Khusus: Bycatch Info ---
+        elif sheet_name in ["3-Bycatch Info", "Bycatch Info"]:
+            b_val = pd.to_numeric(row.get("berat"), errors='coerce')
+            if pd.notna(b_val):
+                if b_val > 290 or b_val < 0.005:
+                    error.append("apakah berat sudah sesuai ?")
+            
+            harga_val = pd.to_numeric(row.get("harga_per_kg"), errors='coerce')
+            if pd.notna(harga_val):
+                if harga_val < 500 or harga_val >= 200000:
+                    error.append("apakah harga sudah sesuai ?")
+                    
+        # --- Logika Khusus: 8-ETP ---
+        elif sheet_name == "8-ETP":
+            interaksi_val = str(row.get("interaksi", "")).strip().lower()
+            jml_interaksi = pd.to_numeric(row.get("jml_interaksi"), errors='coerce')
+            jml_interaksi_clean = 0 if pd.isna(jml_interaksi) else jml_interaksi
+            
+            cols_to_check = [
+                'jml_interaksi', 'jml_didaratkan', 'didaratkan_mati', 'didaratkan_luka_serius', 
+                'didaratkan_luka_ringan', 'didaratkan_tidak_terluka', 'didaratkan_tidak_tahu', 
+                'tidak_didaratkan_mati', 'tidak_didaratkan_luka_serius', 'tidak_didaratkan_luka_ringan', 
+                'tidak_didaratkan_tidak_terluka', 'tidak_didaratkan_tidak_tahu', 'dibuang', 
+                'dimakan', 'dijual', 'diumpan', 'lokasi_interaksi'
+            ]
+            
+            if interaksi_val == "tidak":
+                is_invalid = False
+                for col in cols_to_check:
+                    val = row.get(col)
+                    if col == 'lokasi_interaksi':
+                        val_str = str(val).strip().lower()
+                        if val_str not in ["", "nan", "0", "0.0", "none"]:
+                            is_invalid = True
+                            break
+                    else:
+                        val_num = pd.to_numeric(val, errors='coerce')
+                        if pd.notna(val_num) and val_num != 0:
+                            is_invalid = True
+                            break
+                            
+                if is_invalid:
+                    error.append("rincian interaksi tidak sesuai (harus 0/kosong saat interaksi tidak)")
+                    
+            elif interaksi_val == "ya":
+                if pd.isna(jml_interaksi) or jml_interaksi == 0:
+                    error.append("jml_interaksi tidak boleh 0 atau kosong")
+                else:
+                    jml_didaratkan = pd.to_numeric(row.get("jml_didaratkan"), errors='coerce')
+                    jml_didaratkan_clean = 0 if pd.isna(jml_didaratkan) else jml_didaratkan
+
+                    cols_didaratkan = [
+                        'didaratkan_mati', 'didaratkan_luka_serius', 'didaratkan_luka_ringan', 
+                        'didaratkan_tidak_terluka', 'didaratkan_tidak_tahu'
+                    ]
+                    sum_didaratkan = 0
+                    for c in cols_didaratkan:
+                        val = pd.to_numeric(row.get(c), errors='coerce')
+                        sum_didaratkan += val if pd.notna(val) else 0
+                        
+                    if sum_didaratkan != jml_didaratkan_clean:
+                        error.append("total didaratkan tidak sesuai")
+                        
+                    cols_dimanfaatkan = ['dibuang', 'dimakan', 'dijual', 'diumpan']
+                    sum_dimanfaatkan = 0
+                    for c in cols_dimanfaatkan:
+                        val = pd.to_numeric(row.get(c), errors='coerce')
+                        sum_dimanfaatkan += val if pd.notna(val) else 0
+                        
+                    if sum_dimanfaatkan != jml_didaratkan_clean:
+                        error.append("total dimanfaatkan tidak sesuai")
+
+        # --- Logika Khusus: 9-Unloading ---
+        elif sheet_name in ["9-Unloading", "Unloading"]:
+            bulan_val = pd.to_numeric(row.get("bulan"), errors='coerce')
+            tanggal_val = pd.to_numeric(row.get("tanggal"), errors='coerce')
+            tahun_val = pd.to_numeric(row.get("tahun"), errors='coerce')
+
+            bulan_is_valid = False
+            
+            # Validasi nilai bulan (1-12)
+            if pd.notna(bulan_val):
+                if 1 <= bulan_val <= 12 and (bulan_val % 1 == 0):
+                    bulan_is_valid = True
+                else:
+                    error.append("bulan harus diisi nilai 1-12")
+
+            # Validasi nilai tanggal (1-31 & penyesuaian jumlah hari per bulan termasuk kabisat)
+            if pd.notna(tanggal_val):
+                if not (1 <= tanggal_val <= 31 and (tanggal_val % 1 == 0)):
+                    error.append("tanggal harus diisi nilai 1-31")
+                elif bulan_is_valid:
+                    thn = int(tahun_val) if (pd.notna(tahun_val) and (tahun_val % 1 == 0) and tahun_val > 0) else 2026
+                    _, max_hari = calendar.monthrange(thn, int(bulan_val))
+                    if int(tanggal_val) > max_hari:
+                        error.append(f"tanggal bulan {int(bulan_val)} tahun {thn} maksimal {max_hari}")
+
+            # Validasi WPP tidak boleh bernilai 0
+            wpp_raw = row.get("wpp")
+            if pd.notna(wpp_raw):
+                wpp_str = str(wpp_raw).strip()
+                wpp_num = pd.to_numeric(wpp_raw, errors='coerce')
+                if wpp_str in ["0", "0.0"] or wpp_num == 0:
+                    error.append("wpp tidak boleh bernilai 0")
+
+        # --- Cek Kolom Kosong Berdasarkan Pengecualian ---
         for kolom in df.columns:
-            # DAFTAR PENGECUALIAN (SANGAT PENTING)
             kolom_dilewati = []
+            
             if sheet_name == "1-Trip Info":
                 kolom_dilewati = [
                     "enumerator1", "enumerator2", "penggunaan_es", 
@@ -423,8 +461,8 @@ for sheet_name, df in all_sheets.items():
                     "Kapal andon", "asal andon", "Fairtrade name", 
                     "Deskripsi Kesesuaian", "Deskripsi Kendala Nelayan"
                 ]
+                
             elif sheet_name == "7-LargeFish":
-                # Kolom terkait berat dan panjang diperbolehkan kosong selama memenuhi salah satu logika
                 kolom_dilewati = [
                     "berat", "panjang", "loin1_berat", "loin1_panjang", 
                     "karkas_panjang", "karkas_berat"
@@ -432,46 +470,50 @@ for sheet_name, df in all_sheets.items():
 
             elif sheet_name == "2-Umpan Info":
                 kategori_umpan_cek = str(row.get("kategori_umpan", "")).strip().upper()
-                
                 if kategori_umpan_cek == 'F':
-                    # Jika F, semua ini BOLEH kosong/0
                     kolom_dilewati = [
                         "grid1", "grid2", "total_umpan", "estimasi_umpan", 
                         "alattangkap_umpan", "domestic_or_import", "pengadaan_umpan"
                     ]
                 else:
-                    # Jika A, B, C, D, E, G: 
-                    # grid1, grid2, alattangkap_umpan TIDAK ADA di sini (sehingga akan kena error jika kosong)
-                    # total_umpan & estimasi_umpan ADA di sini (karena validasi kosongnya sudah diatur di logika khusus di atas)
-                    # domestic_or_import & pengadaan_umpan ADA di sini (karena boleh kosong/tidak masalah)
                     kolom_dilewati = [
                         "total_umpan", "estimasi_umpan", 
                         "domestic_or_import", "pengadaan_umpan"
                     ]
 
+            elif sheet_name == "8-ETP":
+                kolom_dilewati = [
+                    'k_species', 'jml_interaksi', 'jml_didaratkan', 'didaratkan_mati', 'didaratkan_luka_serius', 
+                    'didaratkan_luka_ringan', 'didaratkan_tidak_terluka', 'didaratkan_tidak_tahu', 
+                    'tidak_didaratkan_mati', 'tidak_didaratkan_luka_serius', 'tidak_didaratkan_luka_ringan', 
+                    'tidak_didaratkan_tidak_terluka', 'tidak_didaratkan_tidak_tahu', 'dibuang', 
+                    'dimakan', 'dijual', 'diumpan', 'lokasi_interaksi'
+                ]
+
+            elif sheet_name in ["9-Unloading", "Unloading"]:
+                kolom_wajib = ["n_tpi", "n_perusahaan", "nama_kapal", "tempat", "tahun", "bulan", "tanggal", "wpp"]
+                kolom_dilewati = [c for c in df.columns if c not in kolom_wajib]
+
+            # Lewati pengecekan jika kolom ada di daftar pengecualian
             if kolom in kolom_dilewati:
                 continue
                 
-            # Cek kosong untuk kolom-kolom selain pengecualian di atas
+            # Jika tidak dilewati, pastikan tidak kosong
             if pd.isna(row[kolom]) or str(row[kolom]).strip() == "":
-                error.append(f"{kolom} kosong")
-                
-        # ======================================================
-        # Menyusun Catatan
-        # ======================================================
+                error.append(f"data {kolom} kosong")
+            
+        # --- Susun Catatan Validasi (Alasan di depan, "(data tidak valid)" di belakang) ---
         if len(error) == 0:
             catatan.append("Data Valid")
         else:
-            catatan.append("; ".join(error))
+            catatan.append("; ".join(error) + " (data tidak valid)")
             
     df["Catatan Validasi"] = catatan
     validated_sheets[sheet_name] = df
     total_data_keseluruhan += len(df)
     total_error_keseluruhan += (df["Catatan Validasi"] != "Data Valid").sum()
 
-# ==========================================================
-# PREVIEW
-# ==========================================================
+# --- Preview Hasil ---
 st.subheader("Preview Hasil Validasi")
 
 pilih_sheet = st.selectbox(
@@ -499,22 +541,18 @@ sc3.metric("Data Valid", f"{total_valid_sheet:,} ({persen_valid_sheet:.1f}%)")
 
 st.dataframe(df_tampil, use_container_width=True)
 
-# ==========================================================
-# RINGKASAN
-# ==========================================================
+# --- Ringkasan Keseluruhan ---
 st.subheader("Catatan Validasi Keseluruhan")
 
 if total_error_sheet == 0:
-    st.success("Bagus kawand! Seluruh data dari semua sheet ini valid.")
+    st.success("Kerja Bagus kawand...! Seluruh data dari sheet ini valid.")
 else:
     st.warning(
         f"⚠ Ditemukan {total_error_sheet:,} data bermasalah secara keseluruhan dari sheet ini. "
         f"Silakan cek kolom 'Catatan Validasi' pada tabel di atas untuk detailnya atau download filenya."
     )
 
-# ==========================================================
-# DOWNLOAD
-# ==========================================================
+# --- Fitur Download ---
 output = BytesIO()
 with pd.ExcelWriter(output, engine="openpyxl") as writer:
     for sheet_name, df in validated_sheets.items():
@@ -528,9 +566,7 @@ st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
-# ==========================================================
-# FOOTER
-# ==========================================================
+# --- Footer ---
 st.markdown("---")
 st.markdown("""
 <div style='text-align:center;color:#666'>
